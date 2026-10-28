@@ -114,18 +114,30 @@ public struct FloatingHUDView: View {
                                     .frame(maxWidth: .infinity, minHeight: 90, alignment: .center)
                             } else {
                                 ForEach(transcription.segments.suffix(15)) { segment in
-                                    HStack(alignment: .top, spacing: 6) {
+                                    let isLatest = (segment.id == transcription.segments.last?.id)
+
+                                    HStack(alignment: .top, spacing: 8) {
                                         Text(segment.timestampFormatted)
-                                            .font(.system(size: 10, design: .monospaced))
-                                            .foregroundColor(.secondary)
+                                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                            .foregroundColor(.white.opacity(0.8))
+                                            .padding(.horizontal, 5)
+                                            .padding(.vertical, 2)
+                                            .background(Color.black.opacity(0.3))
+                                            .cornerRadius(4)
 
                                         Text(segment.text)
-                                            .font(.system(size: 13, weight: .regular, design: .rounded))
-                                            .foregroundColor(.primary)
+                                            .font(.system(size: 13, weight: .medium, design: .default))
+                                            .foregroundColor(isLatest ? .white : .white.opacity(0.92))
+                                            .lineSpacing(2)
 
                                         Spacer()
                                     }
-                                    .padding(.vertical, 1)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 6)
+                                            .fill(isLatest ? Color.purple.opacity(0.25) : Color.white.opacity(0.04))
+                                    )
                                     .id(segment.id)
                                 }
                             }

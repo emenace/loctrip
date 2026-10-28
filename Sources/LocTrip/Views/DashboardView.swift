@@ -585,18 +585,46 @@ public struct DashboardView: View {
                                 .frame(maxWidth: .infinity, minHeight: 120, alignment: .center)
                             } else {
                                 ForEach(filteredSegments) { segment in
-                                    HStack(alignment: .top, spacing: 10) {
-                                        Text(segment.timestampFormatted)
-                                            .font(.caption.monospaced())
-                                            .foregroundColor(.secondary)
+                                    let isLatest = (segment.id == filteredSegments.last?.id)
 
+                                    HStack(alignment: .top, spacing: 12) {
+                                        // Timestamp pill badge
+                                        HStack(spacing: 4) {
+                                            Circle()
+                                                .fill(isLatest && audioCapture.isLiveStreaming ? Color.green : Color.blue)
+                                                .frame(width: 5, height: 5)
+                                            Text(segment.timestampFormatted)
+                                                .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                                                .foregroundColor(.secondary)
+                                        }
+                                        .padding(.horizontal, 7)
+                                        .padding(.vertical, 3)
+                                        .background(Color(NSColor.controlBackgroundColor))
+                                        .cornerRadius(6)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 6)
+                                                .stroke(Color.gray.opacity(0.18), lineWidth: 1)
+                                        )
+
+                                        // Clean spoken transcript text
                                         Text(segment.text)
-                                            .font(.body)
+                                            .font(.system(size: 13.5, weight: .regular, design: .default))
+                                            .lineSpacing(3)
+                                            .foregroundColor(.primary)
                                             .textSelection(.enabled)
 
                                         Spacer()
                                     }
-                                    .padding(.vertical, 2)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 7)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .fill(isLatest && audioCapture.isLiveStreaming ? Color.purple.opacity(0.08) : Color(NSColor.controlBackgroundColor).opacity(0.4))
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(isLatest && audioCapture.isLiveStreaming ? Color.purple.opacity(0.35) : Color.gray.opacity(0.1), lineWidth: 1)
+                                    )
                                     .id(segment.id)
                                 }
                             }
@@ -604,7 +632,7 @@ public struct DashboardView: View {
                         .padding(14)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    .frame(minHeight: 140, maxHeight: 260)
+                    .frame(minHeight: 180, maxHeight: 320)
                     .background(Color(NSColor.textBackgroundColor).opacity(0.4))
                     .cornerRadius(10)
                     .overlay(

@@ -61,7 +61,7 @@ public final class ExportService: @unchecked Sendable {
             md += "*(Tidak ada percakapan yang terekam / No speech recorded)*\n"
         } else {
             for segment in session.segments {
-                md += "**\(segment.timestampFormatted)** \(segment.text)\n\n"
+                md += "**[\(segment.timestampFormatted)]** \(segment.text)\n\n"
             }
         }
 
@@ -101,7 +101,7 @@ public final class ExportService: @unchecked Sendable {
 
         text += "[TRANSCRIPT]\n"
         for segment in session.segments {
-            text += "\(segment.timestampFormatted) \(segment.text)\n"
+            text += "[\(segment.timestampFormatted)] \(segment.text)\n"
         }
 
         return text

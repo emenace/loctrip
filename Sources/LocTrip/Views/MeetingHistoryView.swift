@@ -518,18 +518,33 @@ public struct MeetingHistoryView: View {
                                 .padding(12)
                         } else {
                             ForEach(session.segments) { segment in
-                                HStack(alignment: .top, spacing: 8) {
+                                HStack(alignment: .top, spacing: 10) {
                                     Text(segment.timestampFormatted)
-                                        .font(.caption.monospaced())
+                                        .font(.system(size: 11, weight: .semibold, design: .monospaced))
                                         .foregroundColor(.secondary)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 3)
+                                        .background(Color(NSColor.controlBackgroundColor))
+                                        .cornerRadius(5)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 5)
+                                                .stroke(Color.gray.opacity(0.18), lineWidth: 1)
+                                        )
 
                                     Text(segment.text)
-                                        .font(.body)
+                                        .font(.system(size: 13.5, weight: .regular))
+                                        .lineSpacing(3)
+                                        .foregroundColor(.primary)
                                         .textSelection(.enabled)
 
                                     Spacer()
                                 }
-                                .padding(.vertical, 2)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .fill(Color(NSColor.controlBackgroundColor).opacity(0.35))
+                                )
                             }
                         }
                     }

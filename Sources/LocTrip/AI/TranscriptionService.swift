@@ -59,14 +59,15 @@ public actor TranscriptionService {
             )
         }
 
-        // Configure multilingual decoding options
-        // If language is nil, WhisperKit automatically detects language per segment (great for code-switching)
+        // Configure multilingual decoding options with strict token stripping
         let decodeOptions = DecodingOptions(
             task: .transcribe,
             language: language,
             temperature: 0.0,
             usePrefillPrompt: prompt != nil,
-            detectLanguage: language == nil
+            detectLanguage: language == nil,
+            skipSpecialTokens: true,
+            withoutTimestamps: true
         )
 
         let results: [TranscriptionResult] = try await whisperKit.transcribe(
@@ -91,12 +92,15 @@ public actor TranscriptionService {
             )
         }
 
+        // Configure multilingual decoding options with strict token stripping
         let decodeOptions = DecodingOptions(
             task: .transcribe,
             language: language,
             temperature: 0.0,
             usePrefillPrompt: prompt != nil,
-            detectLanguage: language == nil
+            detectLanguage: language == nil,
+            skipSpecialTokens: true,
+            withoutTimestamps: true
         )
 
         let results: [TranscriptionResult] = try await whisperKit.transcribe(
@@ -112,13 +116,13 @@ public actor TranscriptionService {
 
         for result in results {
             for segment in result.segments {
-                let trimmed = segment.text.trimmingCharacters(in: .whitespacesAndNewlines)
-                if !trimmed.isEmpty {
+                let cleanedText = TranscriptCleaner.clean(segment.text)
+                if !cleanedText.isEmpty {
                     segments.append(
                         TranscriptSegment(
                             start: segment.start,
                             end: segment.end,
-                            text: trimmed,
+                            text: cleanedText,
                             language: result.language
                         )
                     )

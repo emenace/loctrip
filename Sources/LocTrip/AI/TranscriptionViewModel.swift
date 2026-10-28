@@ -115,12 +115,9 @@ public final class TranscriptionViewModel: ObservableObject {
         }
     }
 
-    /// Appends real-time streaming segments, avoiding duplicate adjacent lines
+    /// Appends real-time streaming segments with smart-merging and sliding window deduplication
     public func appendLiveSegment(_ segment: TranscriptSegment) {
-        if let last = segments.last, last.text == segment.text {
-            return
-        }
-        self.segments.append(segment)
+        TranscriptCleaner.appendOrMerge(newSegment: segment, into: &self.segments)
     }
 
     /// Clears the active transcript list

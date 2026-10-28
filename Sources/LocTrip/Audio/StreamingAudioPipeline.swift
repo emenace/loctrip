@@ -88,6 +88,7 @@ public actor StreamingAudioPipeline {
         streamingTask = Task { [weak self] in
             guard let self = self else { return }
 
+            let streamStartTime = Date()
             // Sliding window: 4.0 seconds chunk (64,000 samples at 16kHz)
             let windowSamples = 16000 * 4
             // Check interval: every 3.0 seconds
@@ -118,10 +119,24 @@ public actor StreamingAudioPipeline {
                         language: language
                     )
 
+                    let elapsed = Float(Date().timeIntervalSince(streamStartTime))
+                    let windowDuration: Float = 4.0
+
                     for segment in segments {
-                        let text = segment.text.trimmingCharacters(in: .whitespacesAndNewlines)
-                        if !text.isEmpty {
-                            await self.notifyNewSegment(segment)
+                        let cleaned = TranscriptCleaner.clean(segment.text)
+                        if !cleaned.isEmpty {
+                            // Compute realistic, continuous cumulative stream timestamps
+                            let absStart = max(0.0, elapsed - windowDuration + segment.start)
+                            let absEnd = max(absStart + 1.0, elapsed - windowDuration + segment.end)
+
+                            let adjustedSegment = TranscriptSegment(
+                                id: segment.id,
+                                start: absStart,
+                                end: absEnd,
+                                text: cleaned,
+                                language: segment.language
+                            )
+                            await self.notifyNewSegment(adjustedSegment)
                         }
                     }
                 } catch {
