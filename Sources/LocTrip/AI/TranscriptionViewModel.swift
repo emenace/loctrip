@@ -41,19 +41,29 @@ public final class TranscriptionViewModel: ObservableObject {
         statusMessage = "Downloading \(selectedModel.displayName)..."
 
         do {
-            try await service.loadModel(model: selectedModel) { [weak self] fraction in
-                Task { @MainActor [weak self] in
-                    self?.modelStatus = .downloading(fraction)
-                    self?.statusMessage = "Downloading: \(Int(fraction * 100))%"
+            try await service.loadModel(
+                model: selectedModel,
+                progressCallback: { [weak self] fraction in
+                    Task { @MainActor [weak self] in
+                        self?.modelStatus = .downloading(fraction)
+                        self?.statusMessage = "Downloading \(self?.selectedModel.displayName ?? ""): \(Int(fraction * 100))%"
+                    }
+                },
+                stageCallback: { [weak self] stage in
+                    Task { @MainActor [weak self] in
+                        self?.modelStatus = .loading
+                        self?.statusMessage = stage
+                    }
                 }
-            }
+            )
 
             self.modelStatus = .ready(selectedModel)
             self.statusMessage = "Model Ready: \(selectedModel.displayName)"
         } catch {
+            print("[TranscriptionViewModel] Model load error: \(error)")
             self.modelStatus = .error(error.localizedDescription)
-            self.errorMessage = "Failed to load model: \(error.localizedDescription)"
-            self.statusMessage = "Model loading failed"
+            self.errorMessage = "Failed to load \(selectedModel.displayName): \(error.localizedDescription)"
+            self.statusMessage = "Download failed"
         }
     }
 

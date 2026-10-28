@@ -355,7 +355,7 @@ public struct DashboardView: View {
                 .background(Color(NSColor.controlBackgroundColor).opacity(0.4))
                 .cornerRadius(6)
 
-                // Model Download Progress Bar (if downloading)
+                // Model Download / Compilation Progress
                 if case .downloading(let progress) = transcription.modelStatus {
                     VStack(alignment: .leading, spacing: 6) {
                         ProgressView(value: progress)
@@ -372,6 +372,45 @@ public struct DashboardView: View {
                     .padding(12)
                     .background(Color.blue.opacity(0.08))
                     .cornerRadius(10)
+                } else if case .loading = transcription.modelStatus {
+                    HStack(spacing: 10) {
+                        ProgressView()
+                            .controlSize(.small)
+                        Text(transcription.statusMessage)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                    .padding(12)
+                    .background(Color.purple.opacity(0.08))
+                    .cornerRadius(10)
+                }
+
+                // Model Error Alert Banner
+                if let errorMsg = transcription.errorMessage {
+                    HStack(spacing: 8) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.orange)
+                        Text(errorMsg)
+                            .font(.caption)
+                            .foregroundColor(.primary)
+                            .textSelection(.enabled)
+                        Spacer()
+                        Button("Dismiss") {
+                            transcription.errorMessage = nil
+                            transcription.modelStatus = .idle
+                        }
+                        .buttonStyle(.plain)
+                        .font(.caption2.bold())
+                        .foregroundColor(.secondary)
+                    }
+                    .padding(10)
+                    .background(Color.orange.opacity(0.12))
+                    .cornerRadius(8)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color.orange.opacity(0.35), lineWidth: 1)
+                    )
                 }
 
                 // Live Streaming Action Control

@@ -3,7 +3,7 @@ import Foundation
 public enum TranscriptionModel: String, CaseIterable, Identifiable, Sendable {
     case base = "openai_whisper-base"
     case small = "openai_whisper-small"
-    case largeV3Turbo = "openai_whisper-large-v3-turbo"
+    case largeV3Turbo = "openai_whisper-large-v3_turbo"
 
     public var id: String { rawValue }
 
@@ -25,7 +25,7 @@ public enum TranscriptionModel: String, CaseIterable, Identifiable, Sendable {
         case .small:
             return "~460 MB"
         case .largeV3Turbo:
-            return "~800 MB"
+            return "~950 MB"
         }
     }
 

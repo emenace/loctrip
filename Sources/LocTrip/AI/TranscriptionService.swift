@@ -19,7 +19,8 @@ public actor TranscriptionService {
     /// Downloads and initializes the requested multilingual Whisper model
     public func loadModel(
         model: TranscriptionModel,
-        progressCallback: (@Sendable (Double) -> Void)? = nil
+        progressCallback: (@Sendable (Double) -> Void)? = nil,
+        stageCallback: (@Sendable (String) -> Void)? = nil
     ) async throws {
         // Download model weights with progress reporting
         let modelFolderURL = try await WhisperKit.download(
@@ -28,6 +29,9 @@ public actor TranscriptionService {
                 progressCallback?(progress.fractionCompleted)
             }
         )
+
+        // Compile and prewarm CoreML weights on ANE / Metal
+        stageCallback?("Compiling CoreML model for Apple Neural Engine...")
 
         // Initialize WhisperKit pointing to the downloaded CoreML model
         let pipe = try await WhisperKit(
