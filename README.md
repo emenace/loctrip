@@ -133,7 +133,7 @@ Development progress is tracked incrementally in [part.md](part.md):
 - [x] **Part 1**: Project Setup, Permissions & Onboarding UI
 - [x] **Part 2**: Output Audio Capture via ScreenCaptureKit (App discovery, 16kHz resampling, WAV testing)
 - [x] **Part 3**: Local AI Model Integration (WhisperKit CoreML, multilingual Indonesian/English, batch transcription)
-- [ ] **Part 4**: Audio Streaming, Chunking & Voice Activity Detection (VAD)
+- [x] **Part 4**: Audio Streaming, Chunking & Voice Activity Detection (VAD) (Circular ring buffer, dual-channel mic mixing, live streaming)
 - [ ] **Part 5**: Real-Time Streaming UI & Floating HUD
 - [ ] **Part 6**: Export, Search & Local LLM Meeting Summaries
 - [ ] **Part 7**: Profiling, Hotkeys & Final Polish

@@ -120,16 +120,17 @@ Each part is designed to be completed in single daily work sessions.
 ### Part 4: Audio Streaming, Chunking & Voice Activity Detection (VAD)
 **Goal**: Stream audio continuously into the model without lagging or transcribing silence.
 
-- [ ] **4.1 Circular Ring Buffer**
-  - Implement a thread-safe ring buffer for incoming 16kHz audio frames.
-- [ ] **4.2 Energy-Based VAD / Silero VAD**
-  - Add Voice Activity Detection to detect speech vs. silence/background noise.
-  - Skip inference during dead silence to keep M2 temperatures cool.
-- [ ] **4.3 Sliding Window Transcription Pipeline**
-  - Implement audio chunking strategy (e.g. 3–5 second sliding audio segments with overlap detection).
-  - Use WhisperKit's streaming transcription handler or sequential chunk decoder with context carryover.
-- [ ] **4.4 Dual-Channel Mixing (Optional / Mic Capture)**
-  - Optional toggle: Mix user's microphone (`AVAudioEngine`) with remote output audio (`ScreenCaptureKit`) so both sides of the conversation are transcribed.
+- [x] **4.1 Circular Ring Buffer**
+  - Implemented thread-safe `CircularAudioBuffer` holding up to 30 seconds of 16kHz Float32 audio samples.
+- [x] **4.2 Energy-Based VAD / Silero VAD**
+  - Implemented `VoiceActivityDetector` with adaptive frame energy calculation and 600ms speech hangover to prevent word truncation.
+  - Automatically skips neural inference during silence to keep M2 thermals cool and save battery.
+- [x] **4.3 Sliding Window Transcription Pipeline**
+  - Built `StreamingAudioPipeline` taking 4.0-second sliding windows with dynamic VAD filtering.
+  - Sequentially streams new transcript segments into the live transcript UI with timestamps.
+- [x] **4.4 Dual-Channel Mixing (Optional / Mic Capture)**
+  - Built `MicrophoneCaptureService` using `AVAudioEngine` and `AVAudioConverter` (16kHz mono).
+  - Added "Include Microphone" toggle in UI to mix user's own speech with meeting participants.
 
 ---
 

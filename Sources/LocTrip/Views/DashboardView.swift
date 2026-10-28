@@ -11,7 +11,7 @@ public struct DashboardView: View {
     public var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                // Top Bar
+                // Top Navigation Bar
                 HStack {
                     HStack(spacing: 10) {
                         Image(systemName: "waveform.circle.fill")
@@ -43,6 +43,7 @@ public struct DashboardView: View {
                     }
                     .pickerStyle(.segmented)
                     .frame(width: 260)
+                    .disabled(audioCapture.isLiveStreaming)
 
                     // Permissions Status Pill
                     Button {
@@ -65,13 +66,13 @@ public struct DashboardView: View {
 
                 Divider()
 
-                // 1. Audio Ingestion Section (Part 2)
+                // Section 1: Audio Source & Dual-Channel Mixing
                 VStack(spacing: 14) {
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 3) {
-                            Text("1. Audio Ingestion (ScreenCaptureKit)")
+                            Text("1. Audio Capture & Source Target")
                                 .font(.headline)
-                            Text("Capture internal sound from Zoom, Google Meet, or entire system without drivers")
+                            Text("ScreenCaptureKit output audio + optional microphone mixing")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -105,7 +106,7 @@ public struct DashboardView: View {
                             .padding(.vertical, 5)
                         }
                         .menuStyle(.borderedButton)
-                        .disabled(audioCapture.isRecording)
+                        .disabled(audioCapture.isRecording || audioCapture.isLiveStreaming)
 
                         // Refresh Apps Button
                         Button {
@@ -117,90 +118,89 @@ public struct DashboardView: View {
                         }
                         .buttonStyle(.bordered)
                         .help("Refresh running applications")
-                        .disabled(audioCapture.isRecording)
+                        .disabled(audioCapture.isRecording || audioCapture.isLiveStreaming)
                     }
 
-                    // Recording Controls & VU Meter Bar
-                    VStack(spacing: 12) {
-                        HStack {
-                            HStack(spacing: 8) {
-                                Circle()
-                                    .fill(audioCapture.isRecording ? Color.red : Color.gray.opacity(0.5))
-                                    .frame(width: 10, height: 10)
-                                Text(audioCapture.statusMessage)
-                                    .font(.subheadline.weight(.medium))
-                            }
-
-                            Spacer()
-
-                            if audioCapture.isRecording {
-                                Text(formatDuration(audioCapture.recordingDuration))
-                                    .font(.system(.title3, design: .monospaced).weight(.bold))
-                                    .foregroundColor(.red)
+                    // Toggles & VAD Status Row
+                    HStack(spacing: 16) {
+                        // Microphone Mixing Toggle
+                        Toggle(isOn: $audioCapture.includeMicrophone) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "mic.badge.plus")
+                                    .foregroundColor(.teal)
+                                Text("Include Microphone (Two-Way Meeting)")
+                                    .font(.subheadline)
                             }
                         }
+                        .toggleStyle(.checkbox)
+                        .disabled(audioCapture.isLiveStreaming || audioCapture.isRecording)
 
-                        // VU Meter
-                        VStack(alignment: .leading, spacing: 4) {
-                            GeometryReader { geo in
-                                ZStack(alignment: .leading) {
-                                    RoundedRectangle(cornerRadius: 6)
-                                        .fill(Color(NSColor.separatorColor).opacity(0.25))
-                                        .frame(height: 10)
+                        Spacer()
 
-                                    RoundedRectangle(cornerRadius: 6)
-                                        .fill(
-                                            LinearGradient(
-                                                colors: [.green, .yellow, .red],
-                                                startPoint: .leading,
-                                                endPoint: .trailing
-                                            )
+                        // Voice Activity Detection (VAD) Pill
+                        HStack(spacing: 6) {
+                            Circle()
+                                .fill(audioCapture.isSpeechDetected ? Color.green : Color.gray.opacity(0.4))
+                                .frame(width: 8, height: 8)
+                            Text(audioCapture.isSpeechDetected ? "Speech Active" : "Silence (VAD Idle)")
+                                .font(.caption.bold())
+                                .foregroundColor(audioCapture.isSpeechDetected ? .green : .secondary)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(Color(NSColor.controlBackgroundColor).opacity(0.6))
+                        .cornerRadius(8)
+                    }
+
+                    // Live VU Level Meter
+                    VStack(alignment: .leading, spacing: 6) {
+                        GeometryReader { geo in
+                            ZStack(alignment: .leading) {
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(Color(NSColor.separatorColor).opacity(0.25))
+                                    .frame(height: 10)
+
+                                RoundedRectangle(cornerRadius: 6)
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [.green, .yellow, .red],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
                                         )
-                                        .frame(width: max(0, min(geo.size.width * CGFloat(audioCapture.audioLevel), geo.size.width)), height: 10)
-                                        .animation(.easeOut(duration: 0.08), value: audioCapture.audioLevel)
-                                }
+                                    )
+                                    .frame(width: max(0, min(geo.size.width * CGFloat(audioCapture.audioLevel), geo.size.width)), height: 10)
+                                    .animation(.easeOut(duration: 0.08), value: audioCapture.audioLevel)
                             }
-                            .frame(height: 10)
                         }
+                        .frame(height: 10)
 
-                        // Record Button
-                        Button {
-                            Task {
-                                if audioCapture.isRecording {
-                                    await audioCapture.stopTestRecording()
-                                } else {
-                                    await audioCapture.startTestRecording()
-                                }
-                            }
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: audioCapture.isRecording ? "stop.fill" : "record.circle.fill")
-                                Text(audioCapture.isRecording ? "Stop Capture Test" : "Record Output Audio Test")
-                                    .fontWeight(.semibold)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 6)
+                        HStack {
+                            Text("16kHz Mono Float32 Stream")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                            Text(audioCapture.statusMessage)
+                                .font(.caption2.bold())
+                                .foregroundColor(.secondary)
                         }
-                        .buttonStyle(.borderedProminent)
-                        .tint(audioCapture.isRecording ? .red : .blue)
                     }
-                    .padding(16)
-                    .background(Color(NSColor.controlBackgroundColor).opacity(0.45))
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(audioCapture.isRecording ? Color.red.opacity(0.4) : Color.gray.opacity(0.12), lineWidth: 1)
-                    )
                 }
+                .padding(16)
+                .background(Color(NSColor.controlBackgroundColor).opacity(0.45))
+                .cornerRadius(12)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color.gray.opacity(0.12), lineWidth: 1)
+                )
                 .padding(.horizontal, 24)
 
-                // 2. AI Model & Local Inference Section (Part 3)
+                // Section 2: Real-Time Streaming & AI Controls (Part 4)
                 VStack(spacing: 14) {
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 3) {
-                            Text("2. On-Device AI Engine (WhisperKit CoreML)")
+                            Text("2. Live Streaming Pipeline (WhisperKit + VAD)")
                                 .font(.headline)
-                            Text("Apple Neural Engine (ANE) acceleration • Multilingual ID + EN")
+                            Text("Continuous sliding-window transcription powered by Apple Neural Engine")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -213,8 +213,8 @@ public struct DashboardView: View {
                                 Text("\(model.displayName) (\(model.downloadSizeDescription))").tag(model)
                             }
                         }
-                        .frame(width: 310)
-                        .disabled(transcription.isTranscribing)
+                        .frame(width: 300)
+                        .disabled(transcription.isTranscribing || audioCapture.isLiveStreaming)
 
                         // Load Model Button
                         Button {
@@ -237,7 +237,7 @@ public struct DashboardView: View {
                             }
                         }
                         .buttonStyle(.bordered)
-                        .disabled(transcription.isTranscribing)
+                        .disabled(transcription.isTranscribing || audioCapture.isLiveStreaming)
                     }
 
                     // Model Download Progress Bar (if downloading)
@@ -259,49 +259,51 @@ public struct DashboardView: View {
                         .cornerRadius(10)
                     }
 
-                    // Transcribe Action Bar
-                    HStack(spacing: 12) {
+                    // Live Streaming Action Control
+                    HStack(spacing: 14) {
                         Button {
-                            if let url = audioCapture.lastSavedWavURL {
-                                Task {
-                                    await transcription.transcribeAudioFile(at: url, languageCode: appState.selectedLanguage)
+                            Task {
+                                if audioCapture.isLiveStreaming {
+                                    await audioCapture.stopLiveStreaming()
+                                } else {
+                                    await audioCapture.startLiveStreaming(languageCode: appState.selectedLanguage)
                                 }
                             }
                         } label: {
                             HStack(spacing: 8) {
-                                if transcription.isTranscribing {
-                                    ProgressView()
-                                        .controlSize(.small)
-                                    Text("Transcribing Locally...")
-                                } else {
-                                    Image(systemName: "sparkles")
-                                    Text("Transcribe Captured Sound")
+                                Image(systemName: audioCapture.isLiveStreaming ? "stop.circle.fill" : "play.circle.fill")
+                                    .font(.title3)
+
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text(audioCapture.isLiveStreaming ? "Stop Live Transcription" : "Start Live Continuous Transcription")
                                         .fontWeight(.semibold)
+
+                                    if audioCapture.isLiveStreaming {
+                                        Text("Streaming live speech to text...")
+                                            .font(.caption2)
+                                    }
+                                }
+
+                                Spacer()
+
+                                if audioCapture.isLiveStreaming {
+                                    Text(formatDuration(audioCapture.recordingDuration))
+                                        .font(.system(.subheadline, design: .monospaced).bold())
                                 }
                             }
-                            .frame(maxWidth: .infinity)
                             .padding(.vertical, 8)
+                            .padding(.horizontal, 14)
                         }
                         .buttonStyle(.borderedProminent)
-                        .tint(.purple)
+                        .tint(audioCapture.isLiveStreaming ? .red : .purple)
                         .controlSize(.large)
-                        .disabled(!transcription.isModelReady || audioCapture.lastSavedWavURL == nil || transcription.isTranscribing)
-
-                        if audioCapture.lastSavedWavURL != nil {
-                            Button {
-                                audioCapture.playLastRecording()
-                            } label: {
-                                Image(systemName: "play.circle")
-                                Text("Play Audio")
-                            }
-                            .buttonStyle(.bordered)
-                        }
+                        .disabled(!transcription.isModelReady || audioCapture.isRecording)
                     }
 
-                    if audioCapture.lastSavedWavURL == nil {
-                        Text("Record a test audio sample above first to run on-device transcription.")
+                    if !transcription.isModelReady {
+                        Text("Please click 'Load Model' above to initialize the AI engine before streaming.")
                             .font(.caption2)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.orange)
                     }
                 }
                 .padding(16)
@@ -309,25 +311,39 @@ public struct DashboardView: View {
                 .cornerRadius(12)
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.purple.opacity(0.2), lineWidth: 1)
+                        .stroke(audioCapture.isLiveStreaming ? Color.purple.opacity(0.4) : Color.purple.opacity(0.15), lineWidth: 1)
                 )
                 .padding(.horizontal, 24)
 
-                // 3. Live Transcript Output Area
+                // Section 3: Live Transcript Stream Display
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
-                        Text("Transcription Result")
-                            .font(.headline)
+                        HStack(spacing: 8) {
+                            Text("Live Meeting Transcript")
+                                .font(.headline)
 
-                        if transcription.lastInferenceTime > 0 {
-                            Text("(\(String(format: "%.2f", transcription.lastInferenceTime))s on ANE)")
-                                .font(.caption)
-                                .foregroundColor(.green)
+                            if audioCapture.isLiveStreaming {
+                                Circle()
+                                    .fill(Color.red)
+                                    .frame(width: 8, height: 8)
+                                Text("LIVE")
+                                    .font(.caption2.bold())
+                                    .foregroundColor(.red)
+                            }
                         }
 
                         Spacer()
 
                         if !transcription.segments.isEmpty {
+                            Button {
+                                transcription.clearTranscript()
+                            } label: {
+                                Image(systemName: "trash")
+                                Text("Clear")
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+
                             Button {
                                 transcription.copyTranscriptToClipboard()
                             } label: {
@@ -342,37 +358,56 @@ public struct DashboardView: View {
                     }
 
                     // Transcript Text Box
-                    VStack(alignment: .leading, spacing: 8) {
-                        if transcription.segments.isEmpty {
-                            Text("No transcript yet. Record output audio and tap 'Transcribe Captured Sound' to test local Whisper inference.")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                                .frame(maxWidth: .infinity, minHeight: 80, alignment: .center)
-                        } else {
-                            ForEach(transcription.segments) { segment in
-                                HStack(alignment: .top, spacing: 10) {
-                                    Text(segment.timestampFormatted)
-                                        .font(.caption.monospaced())
-                                        .foregroundColor(.secondary)
+                    ScrollViewReader { proxy in
+                        ScrollView {
+                            VStack(alignment: .leading, spacing: 8) {
+                                if transcription.segments.isEmpty {
+                                    VStack(spacing: 8) {
+                                        Image(systemName: "text.bubble")
+                                            .font(.title2)
+                                            .foregroundColor(.secondary)
+                                        Text("No speech transcribed yet.\nStart live continuous transcription or play meeting audio to begin.")
+                                            .font(.subheadline)
+                                            .foregroundColor(.secondary)
+                                            .multilineTextAlignment(.center)
+                                    }
+                                    .frame(maxWidth: .infinity, minHeight: 120, alignment: .center)
+                                } else {
+                                    ForEach(transcription.segments) { segment in
+                                        HStack(alignment: .top, spacing: 10) {
+                                            Text(segment.timestampFormatted)
+                                                .font(.caption.monospaced())
+                                                .foregroundColor(.secondary)
 
-                                    Text(segment.text)
-                                        .font(.body)
-                                        .textSelection(.enabled)
+                                            Text(segment.text)
+                                                .font(.body)
+                                                .textSelection(.enabled)
 
-                                    Spacer()
+                                            Spacer()
+                                        }
+                                        .padding(.vertical, 2)
+                                        .id(segment.id)
+                                    }
                                 }
-                                .padding(.vertical, 2)
+                            }
+                            .padding(14)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .frame(minHeight: 140, maxHeight: 260)
+                        .background(Color(NSColor.textBackgroundColor).opacity(0.4))
+                        .cornerRadius(10)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(Color.gray.opacity(0.15), lineWidth: 1)
+                        )
+                        .onChange(of: transcription.segments.count) { _, _ in
+                            if let last = transcription.segments.last {
+                                withAnimation {
+                                    proxy.scrollTo(last.id, anchor: .bottom)
+                                }
                             }
                         }
                     }
-                    .padding(14)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color(NSColor.textBackgroundColor).opacity(0.4))
-                    .cornerRadius(10)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color.gray.opacity(0.15), lineWidth: 1)
-                    )
                 }
                 .padding(.horizontal, 24)
 
@@ -380,7 +415,7 @@ public struct DashboardView: View {
 
                 // Footer
                 HStack {
-                    Text("LocTrip • Part 3: Local WhisperKit Inference")
+                    Text("LocTrip • Part 4: Audio Streaming & Voice Activity Detection (VAD)")
                         .font(.caption2)
                         .foregroundColor(.secondary)
 
@@ -396,7 +431,7 @@ public struct DashboardView: View {
                 .padding(.bottom, 14)
             }
         }
-        .frame(minWidth: 720, minHeight: 620)
+        .frame(minWidth: 740, minHeight: 660)
         .task {
             await audioCapture.loadTargets()
         }

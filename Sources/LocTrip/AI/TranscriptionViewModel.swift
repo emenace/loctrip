@@ -107,4 +107,18 @@ public final class TranscriptionViewModel: ObservableObject {
             self.copiedToClipboard = false
         }
     }
+
+    /// Appends real-time streaming segments, avoiding duplicate adjacent lines
+    public func appendLiveSegment(_ segment: TranscriptSegment) {
+        if let last = segments.last, last.text == segment.text {
+            return
+        }
+        self.segments.append(segment)
+    }
+
+    /// Clears the active transcript list
+    public func clearTranscript() {
+        self.segments.removeAll()
+    }
 }
+
