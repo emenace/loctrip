@@ -31,12 +31,21 @@ public actor TranscriptionService {
         )
 
         // Compile and prewarm CoreML weights on ANE / Metal
-        stageCallback?("Compiling CoreML model for Apple Neural Engine...")
+        stageCallback?("Optimizing CoreML weights for Apple Neural Engine...")
 
-        // Initialize WhisperKit pointing to the downloaded CoreML model
+        let computeOptions = ModelComputeOptions(
+            audioEncoderCompute: .cpuAndNeuralEngine,
+            textDecoderCompute: .cpuAndNeuralEngine
+        )
+
+        // Initialize WhisperKit pointing to the downloaded CoreML model with prewarming
         let pipe = try await WhisperKit(
             modelFolder: modelFolderURL.path,
-            verbose: true
+            computeOptions: computeOptions,
+            verbose: false,
+            logLevel: .none,
+            prewarm: true,
+            load: true
         )
 
         self.whisperKit = pipe
@@ -68,7 +77,10 @@ public actor TranscriptionService {
             task: .transcribe,
             language: language,
             temperature: 0.0,
+            temperatureFallbackCount: 0,
+            sampleLength: 64,
             usePrefillPrompt: prompt != nil,
+            usePrefillCache: true,
             detectLanguage: language == nil,
             skipSpecialTokens: true,
             withoutTimestamps: true
@@ -101,7 +113,10 @@ public actor TranscriptionService {
             task: .transcribe,
             language: language,
             temperature: 0.0,
+            temperatureFallbackCount: 0,
+            sampleLength: 64,
             usePrefillPrompt: prompt != nil,
+            usePrefillCache: true,
             detectLanguage: language == nil,
             skipSpecialTokens: true,
             withoutTimestamps: true

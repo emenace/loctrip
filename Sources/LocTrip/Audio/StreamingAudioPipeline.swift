@@ -88,23 +88,30 @@ public actor StreamingAudioPipeline {
         streamingTask = Task { [weak self] in
             guard let self = self else { return }
 
-            let streamStartTime = Date()
-            // Sliding window: 4.0 seconds chunk (64,000 samples at 16kHz)
-            let windowSamples = 16000 * 4
-            // Check interval: every 3.0 seconds
-            let intervalNanoseconds: UInt64 = 3_000_000_000
+            // Step size: 2.5 seconds (40,000 samples at 16kHz)
+            let stepSamples = 16000 * 5 / 2
+            // Preceding context: 1.0 second (16,000 samples)
+            let contextSamples = 16000
+
+            var streamElapsedSeconds: Double = 0.0
 
             while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: intervalNanoseconds)
-                guard !Task.isCancelled else { break }
-
-                let samples = self.ringBuffer.getLatest(count: windowSamples)
-                guard samples.count >= 16000 * 2 else {
+                guard let chunk = await self.fetchNextChunk(stepSamples: stepSamples, contextSamples: contextSamples) else {
+                    // Audio accumulating; sleep short 100ms tick to stay responsive
+                    try? await Task.sleep(nanoseconds: 100_000_000)
                     continue
                 }
 
+                guard !Task.isCancelled else { break }
+
+                let chunkSamples = chunk.samples
+                let stepDuration = Double(chunk.step) / 16000.0
+                let segmentStart = streamElapsedSeconds
+                let segmentEnd = streamElapsedSeconds + stepDuration
+                streamElapsedSeconds += stepDuration
+
                 // Voice Activity Detection: check if audio contains human speech
-                let hasSpeech = self.vad.containsSpeech(in: samples)
+                let hasSpeech = await self.checkSpeech(samples: chunkSamples)
                 await self.notifySpeechStatus(hasSpeech)
 
                 // Skip inference if audio is silent
@@ -115,24 +122,17 @@ public actor StreamingAudioPipeline {
                 // Perform Whisper on-device inference
                 do {
                     let segments = try await self.transcriptionService.transcribe(
-                        audioSamples: samples,
+                        audioSamples: chunkSamples,
                         language: language
                     )
-
-                    let elapsed = Float(Date().timeIntervalSince(streamStartTime))
-                    let windowDuration: Float = 4.0
 
                     for segment in segments {
                         let cleaned = TranscriptCleaner.clean(segment.text)
                         if !cleaned.isEmpty {
-                            // Compute realistic, continuous cumulative stream timestamps
-                            let absStart = max(0.0, elapsed - windowDuration + segment.start)
-                            let absEnd = max(absStart + 1.0, elapsed - windowDuration + segment.end)
-
                             let adjustedSegment = TranscriptSegment(
-                                id: segment.id,
-                                start: absStart,
-                                end: absEnd,
+                                id: UUID(),
+                                start: Float(segmentStart),
+                                end: Float(segmentEnd),
                                 text: cleaned,
                                 language: segment.language
                             )
@@ -140,10 +140,20 @@ public actor StreamingAudioPipeline {
                         }
                     }
                 } catch {
-                    await self.notifyError(error)
+                    if !Task.isCancelled {
+                        await self.notifyError(error)
+                    }
                 }
             }
         }
+    }
+
+    private func fetchNextChunk(stepSamples: Int, contextSamples: Int) -> (samples: [Float], step: Int)? {
+        return self.ringBuffer.readChunk(stepSamples: stepSamples, contextSamples: contextSamples)
+    }
+
+    private func checkSpeech(samples: [Float]) -> Bool {
+        return self.vad.containsSpeech(in: samples)
     }
 
     private func notifySpeechStatus(_ isSpeech: Bool) {

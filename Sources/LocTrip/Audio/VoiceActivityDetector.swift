@@ -14,9 +14,9 @@ public final class VoiceActivityDetector: @unchecked Sendable {
     public init(
         sampleRate: Int = 16000,
         frameDuration: Double = 0.05, // 50ms frames
-        energyThreshold: Float = 0.012,
-        hangoverSeconds: Double = 0.6, // 600ms hangover to prevent word chopping
-        minSpeechRatio: Float = 0.15 // at least 15% of frames must contain speech
+        energyThreshold: Float = 0.006, // Receptive to normal system and laptop playback
+        hangoverSeconds: Double = 0.8, // 800ms hangover to prevent word chopping
+        minSpeechRatio: Float = 0.08 // Capture short phrases and continuous speech
     ) {
         self.sampleRate = sampleRate
         self.frameSize = Int(Double(sampleRate) * frameDuration)

@@ -3,7 +3,7 @@ import Foundation
 public enum TranscriptionModel: String, CaseIterable, Identifiable, Sendable {
     case base = "openai_whisper-base"
     case small = "openai_whisper-small"
-    case largeV3Turbo = "openai_whisper-large-v3_turbo"
+    case largeV3Turbo = "openai_whisper-large-v3-v20240930_turbo_632MB"
 
     public var id: String { rawValue }
 
@@ -14,7 +14,7 @@ public enum TranscriptionModel: String, CaseIterable, Identifiable, Sendable {
         case .small:
             return "Whisper Small (Recommended for ID)"
         case .largeV3Turbo:
-            return "Whisper Large-v3-Turbo (Highest Accuracy)"
+            return "Whisper Large-v3-Turbo (Apple Neural Engine 632MB)"
         }
     }
 
@@ -25,7 +25,7 @@ public enum TranscriptionModel: String, CaseIterable, Identifiable, Sendable {
         case .small:
             return "~460 MB"
         case .largeV3Turbo:
-            return "~950 MB"
+            return "~630 MB"
         }
     }
 
@@ -36,7 +36,7 @@ public enum TranscriptionModel: String, CaseIterable, Identifiable, Sendable {
         case .small:
             return "Strong Bahasa Indonesia accuracy and code-switching. Very low latency on M2."
         case .largeV3Turbo:
-            return "State-of-the-art multilingual accuracy for technical vocabulary and mixed language."
+            return "State-of-the-art multilingual accuracy optimized for Apple Silicon ANE (< 1GB RAM)."
         }
     }
 }
