@@ -13,7 +13,14 @@ LocTrip is a native macOS application that captures internal system/application 
 - 🧠 **Apple Silicon M2 Optimized**: Powered by **WhisperKit (CoreML)** running inference directly on the **Apple Neural Engine (ANE)** and Metal GPU for minimal CPU usage and low battery drain.
 - 🇮🇩 🇬🇧 **Bilingual Indonesian + English Focus**: Built with multilingual Whisper models (`base`, `small`, `large-v3-turbo`) and tokenizer priming to accurately transcribe technical conversations and code-switching ("bahasa campur / Jaksel").
 - 🎚️ **Live VU Meter & Waveform**: Real-time audio power monitoring with automatic downmixing to **16,000 Hz mono Float32** format.
-- 📋 **Timestamped Transcript Export**: View timestamped segments and copy formatted text to your clipboard in one click.
+- 🪟 **Floating Glassmorphic HUD & Menu Bar**: Always-on-top overlay panel (`NSPanel`) and macOS menu bar status icon for unobtrusive monitoring during full-screen calls.
+- 🗂️ **Local Meeting Persistence & Search**: Auto-saves past meeting sessions with date, duration, target app, word count, and full transcripts. Features instant bilingual keyword search across past calls.
+- 📋 **Flexible Multi-Format Export**: Export meeting transcripts to GitHub-flavored Markdown (`.md`), Plain Text (`.txt`), or SubRip Subtitles (`.srt`) using the native macOS Save Dialog (`NSSavePanel`) or one-click clipboard copy.
+- 🤖 **Bilingual Meeting Summarization**: Generate structured summaries locally:
+  - **Ringkasan Eksekutif / Executive Summary**
+  - **Poin-Poin Penting / Key Discussion Points**
+  - **Tindak Lanjut & PIC / Action Items & Tasks**
+  - Works with **Local Ollama LLMs** (`llama3`, `mistral`, etc.) or a fast **100% Offline Built-in Heuristic Engine** with zero dependencies!
 
 ---
 
@@ -114,10 +121,11 @@ loctrip/
 ├── Sources/LocTrip/
 │   ├── App/                         # SwiftUI @main entry point
 │   ├── Permissions/                 # ScreenCaptureKit & Microphone permission manager
-│   ├── Audio/                       # ScreenCaptureKit service, resampler, WAV writer
-│   ├── AI/                          # WhisperKit integration, models, transcription service
-│   ├── Models/                      # App state and ViewModels
-│   └── Views/                       # SwiftUI Dashboard, Permissions, and Content views
+│   ├── Audio/                       # ScreenCaptureKit, resampler, circular buffer, VAD, pipeline
+│   ├── AI/                          # WhisperKit CoreML, model downloader, transcript segments
+│   ├── Storage/                     # MeetingSession, JSON storage, ExportService, LocalSummarization
+│   ├── Models/                      # App state and shared ViewModels
+│   └── Views/                       # DashboardView, FloatingHUDView, MenuBarManager, MeetingHistoryView
 ├── scripts/
 │   └── build_app.sh                 # Packaging & ad-hoc code-signing script
 ├── part.md                          # Incremental daily roadmap & checklist
@@ -135,7 +143,7 @@ Development progress is tracked incrementally in [part.md](part.md):
 - [x] **Part 3**: Local AI Model Integration (WhisperKit CoreML, multilingual Indonesian/English, batch transcription)
 - [x] **Part 4**: Audio Streaming, Chunking & Voice Activity Detection (VAD) (Circular ring buffer, dual-channel mic mixing, live streaming)
 - [x] **Part 5**: Real-Time Streaming UI & Floating HUD (Always-on-top glassmorphic HUD, Menu Bar controls, live search)
-- [ ] **Part 6**: Export, Search & Local LLM Meeting Summaries
+- [x] **Part 6**: Export, Search & Local LLM Meeting Summaries (Markdown/TXT/SRT export, history browser, bilingual summarizer)
 - [ ] **Part 7**: Profiling, Hotkeys & Final Polish
 
 ---

@@ -173,6 +173,24 @@ public struct FloatingHUDView: View {
                     .controlSize(.small)
                     .help("Copy transcript")
 
+                    if !transcription.segments.isEmpty {
+                        Button {
+                            _ = MeetingHistoryViewModel.shared.saveSession(
+                                title: nil,
+                                duration: audioCapture.recordingDuration,
+                                appName: audioCapture.selectedTarget.name,
+                                language: appState.selectedLanguage,
+                                segments: transcription.segments
+                            )
+                        } label: {
+                            Image(systemName: "square.and.arrow.down")
+                                .font(.caption)
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                        .help("Save session to History")
+                    }
+
                     Spacer()
 
                     // Transparency Slider

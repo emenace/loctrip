@@ -112,6 +112,17 @@ public final class AudioCaptureViewModel: ObservableObject {
         self.isSpeechDetected = false
         self.audioLevel = 0.0
         self.statusMessage = "Live streaming stopped"
+
+        let currentSegments = TranscriptionViewModel.shared.segments
+        if !currentSegments.isEmpty {
+            _ = MeetingHistoryViewModel.shared.saveSession(
+                title: nil,
+                duration: recordingDuration,
+                appName: selectedTarget.name,
+                language: AppViewModel.shared.selectedLanguage,
+                segments: currentSegments
+            )
+        }
     }
 
     /// Starts capturing output sound and writing to a test WAV file

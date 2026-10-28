@@ -155,19 +155,22 @@ Each part is designed to be completed in single daily work sessions.
 ### Part 6: Export, Search & Local Summarization
 **Goal**: Save transcripts, search history, and generate meeting summaries.
 
-- [ ] **6.1 Persistence (Local SQLite / SwiftData)**
-  - Store meeting sessions: Session Name, Date, Duration, Target App, Segments, Detected Language.
-- [ ] **6.2 Export Formats**
-  - Export to Markdown (`.md`) with timestamps and optional speaker tags.
-  - Export to plain text (`.txt`) and subtitles (`.srt`).
-  - One-click "Copy Transcript to Clipboard".
-- [ ] **6.3 Search & Filter**
-  - Search past transcripts with bilingual keyword matching.
-- [ ] **6.4 Local Meeting Summarization (Bonus / Local LLM)**
-  - Integrate with local LLM (via local Ollama HTTP API or Apple MLX / Foundation Models) to generate bilingual meeting summaries:
-    - Ringkasan Rapat / Executive Summary (ID or EN)
-    - Poin-Poin Penting / Key Bullet Points
-    - Action Items & PIC (Person-in-Charge).
+- [x] **6.1 Persistence (Local SQLite / SwiftData / JSON)**
+  - Stored meeting sessions in `~/Library/Application Support/com.loctrip.app/sessions/` with Title, Date, Duration, Target App, Segments, and Detected Language.
+  - Automatic session saving upon streaming completion and explicit manual save controls.
+- [x] **6.2 Export Formats**
+  - Export to GitHub-flavored Markdown (`.md`) with timestamps, formatted headers, and embedded summary.
+  - Export to Plain Text (`.txt`) and standard SubRip Subtitles (`.srt`).
+  - Native macOS Save Panel (`NSSavePanel`) integration and one-click "Copy Transcript to Clipboard".
+- [x] **6.3 Search & Filter**
+  - Built interactive `MeetingHistoryView` split master-detail view.
+  - Real-time bilingual keyword search across past session titles, applications, and full spoken transcript text.
+- [x] **6.4 Local Meeting Summarization (Dual Mode)**
+  - Integrated local Ollama HTTP API (`http://127.0.0.1:11434/api/generate`) with automatic tag detection (`/api/tags`).
+  - Built intelligent 100% offline bilingual heuristic engine (zero external dependencies) that analyzes Indonesian and English discussion patterns to extract:
+    - Ringkasan Eksekutif / Executive Summary (Bilingual ID/EN)
+    - Poin-Poin Penting / Key Discussion Points
+    - Tindak Lanjut & PIC / Action Items with interactive checkboxes.
 
 ---
 

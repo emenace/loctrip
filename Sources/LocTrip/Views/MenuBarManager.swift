@@ -67,6 +67,19 @@ extension MenuBarManager: NSMenuDelegate {
         hudItem.target = self
         menu.addItem(hudItem)
 
+        // Open Meeting History
+        let historyTitle = "Meeting History & Summaries (\(MeetingHistoryViewModel.shared.sessions.count))"
+        let historyItem = NSMenuItem(title: historyTitle, action: #selector(openHistory), keyEquivalent: "m")
+        historyItem.target = self
+        menu.addItem(historyItem)
+
+        // Copy Live Transcript
+        if !TranscriptionViewModel.shared.segments.isEmpty {
+            let copyItem = NSMenuItem(title: "Copy Current Transcript", action: #selector(copyTranscript), keyEquivalent: "c")
+            copyItem.target = self
+            menu.addItem(copyItem)
+        }
+
         menu.addItem(NSMenuItem.separator())
 
         // Show Main Dashboard Window
@@ -103,6 +116,16 @@ extension MenuBarManager: NSMenuDelegate {
         if let window = NSApplication.shared.windows.first(where: { !($0 is NSPanel) }) {
             window.makeKeyAndOrderFront(nil)
         }
+    }
+
+    @objc private func openHistory() {
+        openMainWindow()
+        MeetingHistoryViewModel.shared.refreshSessions()
+        AppViewModel.shared.showHistoryModal = true
+    }
+
+    @objc private func copyTranscript() {
+        TranscriptionViewModel.shared.copyTranscriptToClipboard()
     }
 
     @objc private func quitApp() {

@@ -1,6 +1,6 @@
 import Foundation
 
-public struct TranscriptSegment: Identifiable, Sendable {
+public struct TranscriptSegment: Identifiable, Sendable, Codable {
     public let id: UUID
     public let start: Float
     public let end: Float

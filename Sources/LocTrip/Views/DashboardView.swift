@@ -5,6 +5,7 @@ public struct DashboardView: View {
     @ObservedObject var appState = AppViewModel.shared
     @ObservedObject var audioCapture = AudioCaptureViewModel.shared
     @ObservedObject var transcription = TranscriptionViewModel.shared
+    @ObservedObject var historyVM = MeetingHistoryViewModel.shared
 
     public init() {}
 
@@ -50,6 +51,32 @@ public struct DashboardView: View {
                     }
 
                     Spacer()
+
+                    // History Button
+                    Button {
+                        historyVM.refreshSessions()
+                        appState.showHistoryModal = true
+                    } label: {
+                        HStack(spacing: 5) {
+                            Image(systemName: "clock.arrow.circlepath")
+                                .foregroundColor(.blue)
+                            Text("History")
+                                .font(.caption.bold())
+                            if !historyVM.sessions.isEmpty {
+                                Text("\(historyVM.sessions.count)")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .padding(.horizontal, 5)
+                                    .padding(.vertical, 1)
+                                    .background(Color.blue)
+                                    .foregroundColor(.white)
+                                    .clipShape(Capsule())
+                            }
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                    }
+                    .buttonStyle(.bordered)
+                    .help("View Past Saved Meetings, Summaries & Search")
 
                     // Floating HUD Toggle Button
                     Button {
@@ -403,13 +430,64 @@ public struct DashboardView: View {
                     )
 
                     if !transcription.segments.isEmpty {
+                        // Save to History Button
                         Button {
-                            transcription.clearTranscript()
+                            _ = historyVM.saveSession(
+                                title: nil,
+                                duration: audioCapture.recordingDuration,
+                                appName: audioCapture.selectedTarget.name,
+                                language: appState.selectedLanguage,
+                                segments: transcription.segments
+                            )
                         } label: {
-                            Image(systemName: "trash")
-                            Text("Clear")
+                            HStack(spacing: 4) {
+                                Image(systemName: "square.and.arrow.down")
+                                Text("Save Session")
+                            }
                         }
                         .buttonStyle(.bordered)
+                        .controlSize(.small)
+                        .help("Save transcript to local session history")
+
+                        // Export Menu
+                        Menu {
+                            Button("Export to Markdown (.md)") {
+                                let session = MeetingSession(
+                                    durationSeconds: audioCapture.recordingDuration,
+                                    targetAppName: audioCapture.selectedTarget.name,
+                                    languageMode: appState.selectedLanguage,
+                                    segments: transcription.segments
+                                )
+                                let md = ExportService.shared.generateMarkdown(session: session)
+                                _ = ExportService.shared.exportToFile(content: md, defaultFilename: "LocTrip_Meeting", fileExtension: "md")
+                            }
+                            Button("Export to Plain Text (.txt)") {
+                                let session = MeetingSession(
+                                    durationSeconds: audioCapture.recordingDuration,
+                                    targetAppName: audioCapture.selectedTarget.name,
+                                    languageMode: appState.selectedLanguage,
+                                    segments: transcription.segments
+                                )
+                                let txt = ExportService.shared.generatePlainText(session: session)
+                                _ = ExportService.shared.exportToFile(content: txt, defaultFilename: "LocTrip_Meeting", fileExtension: "txt")
+                            }
+                            Button("Export Subtitles (.srt)") {
+                                let session = MeetingSession(
+                                    durationSeconds: audioCapture.recordingDuration,
+                                    targetAppName: audioCapture.selectedTarget.name,
+                                    languageMode: appState.selectedLanguage,
+                                    segments: transcription.segments
+                                )
+                                let srt = ExportService.shared.generateSRT(session: session)
+                                _ = ExportService.shared.exportToFile(content: srt, defaultFilename: "LocTrip_Meeting", fileExtension: "srt")
+                            }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "square.and.arrow.up")
+                                Text("Export")
+                            }
+                        }
+                        .menuStyle(.borderedButton)
                         .controlSize(.small)
 
                         Button {
@@ -419,6 +497,15 @@ public struct DashboardView: View {
                                 Image(systemName: transcription.copiedToClipboard ? "checkmark" : "doc.on.doc")
                                 Text(transcription.copiedToClipboard ? "Copied!" : "Copy")
                             }
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+
+                        Button {
+                            transcription.clearTranscript()
+                        } label: {
+                            Image(systemName: "trash")
+                            Text("Clear")
                         }
                         .buttonStyle(.bordered)
                         .controlSize(.small)
@@ -483,7 +570,7 @@ public struct DashboardView: View {
 
             // Footer
             HStack {
-                Text("LocTrip • Part 5: UI & Real-Time Transcript Display")
+                Text("LocTrip • Part 6: Export, Search & Local Summarization")
                     .font(.caption2)
                     .foregroundColor(.secondary)
 
@@ -506,6 +593,11 @@ public struct DashboardView: View {
     .sheet(isPresented: $appState.showSettingsModal) {
         PermissionView {
             appState.showSettingsModal = false
+        }
+    }
+    .sheet(isPresented: $appState.showHistoryModal) {
+        MeetingHistoryView {
+            appState.showHistoryModal = false
         }
     }
 }
