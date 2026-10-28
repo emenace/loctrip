@@ -137,19 +137,18 @@ Each part is designed to be completed in single daily work sessions.
 ### Part 5: SwiftUI User Interface & Real-Time Transcript Display
 **Goal**: Design an elegant, distraction-free macOS interface for live meetings.
 
-- [ ] **5.1 App Window Architecture**
-  - Support two modes:
-    - **Floating HUD Mode**: Semi-transparent, always-on-top window overlay (ideal while viewing meeting slides).
-    - **Menu Bar App**: Resides in macOS status bar for background recording.
-- [ ] **5.2 Live Transcript Stream UI**
-  - Auto-scrolling list of transcript bubbles with timestamps (`HH:mm:ss`).
-  - Active line indicator for in-progress speech segments.
-- [ ] **5.3 Audio Source, Language & Model Selector**
-  - Dropdown to switch targets: "Entire System Audio", "Zoom", "Google Chrome", etc.
-  - **Language Selector**: "Auto-Detect (ID / EN)", "Bahasa Indonesia", or "English".
-  - Model selection dropdown with download status (`whisper-base`, `whisper-small`, `large-v3-turbo`).
-- [ ] **5.4 Play / Pause / Stop Controls**
-  - Start/stop recording buttons with animated audio visualizer (waveform or VU meter).
+- [x] **5.1 App Window Architecture**
+  - Built **Floating HUD Mode** (`FloatingHUDView` / `HUDWindowManager`) using an always-on-top, semi-transparent `NSPanel` that stays visible over fullscreen video calls and across all macOS spaces.
+  - Built **Menu Bar App** (`MenuBarManager`) providing macOS system status item with quick streaming toggle, HUD toggle, and live state icon.
+- [x] **5.2 Live Transcript Stream UI**
+  - Auto-scrolling transcript list with timestamps, word/segment counters, and real-time keyword search filter.
+  - Active line indicators and live VAD status badges (`Speech Active` vs `Silence (VAD Idle)`).
+- [x] **5.3 Audio Source, Language & Model Selector**
+  - Dropdown target selector for system audio or specific applications (Zoom, Chrome, Teams).
+  - Bilingual mode picker (`Auto ID/EN`, `Bahasa Indonesia`, `English`).
+  - CoreML model selector with local download status and cache manager.
+- [x] **5.4 Play / Pause / Stop Controls**
+  - Live continuous streaming toggle button, interactive VU meter level bar, transparency slider, and keyboard shortcuts (`Cmd+Shift+H` for HUD, `Cmd+Shift+R` for recording).
 
 ---
 
