@@ -116,17 +116,19 @@ public final class ScreenAudioCaptureService: NSObject, SCStreamOutput, SCStream
     public func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, of type: SCStreamOutputType) {
         guard type == .audio else { return }
 
-        // Downmix & resample to 16kHz mono Float32
-        guard let (samples, pcmBuffer) = resampler.resample(sampleBuffer: sampleBuffer) else {
-            return
+        autoreleasepool {
+            // Downmix & resample to 16kHz mono Float32
+            guard let (samples, pcmBuffer) = resampler.resample(sampleBuffer: sampleBuffer) else {
+                return
+            }
+
+            // Calculate RMS power for audio visualizer
+            let rms = AudioResampler.calculateRMSLevel(samples: samples)
+            onAudioLevel?(rms)
+
+            // Pass 16kHz buffer for saving to WAV and feeding to Whisper
+            onResampledAudio?(samples, pcmBuffer)
         }
-
-        // Calculate RMS power for audio visualizer
-        let rms = AudioResampler.calculateRMSLevel(samples: samples)
-        onAudioLevel?(rms)
-
-        // Pass 16kHz buffer for saving to WAV and (in Part 3) feeding to Whisper
-        onResampledAudio?(samples, pcmBuffer)
     }
 
     // MARK: - SCStreamDelegate

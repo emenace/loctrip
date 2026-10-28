@@ -57,6 +57,13 @@ public final class TranscriptionViewModel: ObservableObject {
         }
     }
 
+    /// Unloads model from memory to free up RAM
+    public func unloadModel() async {
+        await service.unloadModel()
+        self.modelStatus = .idle
+        self.statusMessage = "Model unloaded. RAM cleared."
+    }
+
     /// Transcribes a specific WAV file
     public func transcribeAudioFile(at url: URL, languageCode: String) async {
         guard isModelReady else {

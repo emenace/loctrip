@@ -39,6 +39,12 @@ public actor TranscriptionService {
         self.currentModel = model
     }
 
+    /// Unloads the Whisper model from memory to free up RAM
+    public func unloadModel() {
+        self.whisperKit = nil
+        self.currentModel = nil
+    }
+
     /// Transcribes an audio file (e.g. the WAV captured from Part 2)
     public func transcribe(
         wavURL: URL,

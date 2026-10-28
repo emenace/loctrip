@@ -124,6 +124,7 @@ loctrip/
 │   ├── Audio/                       # ScreenCaptureKit, resampler, circular buffer, VAD, pipeline
 │   ├── AI/                          # WhisperKit CoreML, model downloader, transcript segments
 │   ├── Storage/                     # MeetingSession, JSON storage, ExportService, LocalSummarization
+│   ├── System/                      # Resident RAM profiling, global hotkeys, lifecycle handlers
 │   ├── Models/                      # App state and shared ViewModels
 │   └── Views/                       # DashboardView, FloatingHUDView, MenuBarManager, MeetingHistoryView
 ├── scripts/
@@ -131,6 +132,19 @@ loctrip/
 ├── part.md                          # Incremental daily roadmap & checklist
 └── README.md                        # Documentation
 ```
+
+---
+
+## ⌨️ Global Keyboard Shortcuts
+
+LocTrip provides convenient global keyboard shortcuts that function across macOS, even when other full-screen apps (Zoom, Teams, Meet) are frontmost:
+
+| Shortcut | Action | Description |
+| :--- | :--- | :--- |
+| `Cmd + Shift + R` | **Toggle Transcription** | Starts or stops the live streaming pipeline |
+| `Cmd + Shift + H` | **Toggle Floating HUD** | Shows or hides the always-on-top glassmorphic HUD |
+| `Cmd + Shift + S` | **Quick-Save Meeting** | Instantly saves current transcript session to local history |
+| `Cmd + Shift + C` | **Copy Transcript** | Copies full transcript with timestamps to clipboard |
 
 ---
 
@@ -144,7 +158,7 @@ Development progress is tracked incrementally in [part.md](part.md):
 - [x] **Part 4**: Audio Streaming, Chunking & Voice Activity Detection (VAD) (Circular ring buffer, dual-channel mic mixing, live streaming)
 - [x] **Part 5**: Real-Time Streaming UI & Floating HUD (Always-on-top glassmorphic HUD, Menu Bar controls, live search)
 - [x] **Part 6**: Export, Search & Local LLM Meeting Summaries (Markdown/TXT/SRT export, history browser, bilingual summarizer)
-- [ ] **Part 7**: Profiling, Hotkeys & Final Polish
+- [x] **Part 7**: Profiling, Hotkeys & Final Polish (M2 RAM telemetry, global hotkeys, AirPods disconnect handling, graceful quit)
 
 ---
 

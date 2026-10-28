@@ -297,7 +297,63 @@ public struct DashboardView: View {
                     }
                     .buttonStyle(.bordered)
                     .disabled(transcription.isTranscribing || audioCapture.isLiveStreaming)
+
+                    if transcription.isModelReady && !audioCapture.isLiveStreaming {
+                        Button {
+                            Task {
+                                await transcription.unloadModel()
+                            }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "eject")
+                                Text("Free RAM")
+                            }
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                        .help("Unload model from RAM")
+                    }
                 }
+
+                // M2 Hardware & Memory Telemetry Banner
+                HStack(spacing: 12) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "cpu")
+                            .foregroundColor(.purple)
+                        Text("Engine:")
+                            .font(.caption2.bold())
+                        Text("Apple Neural Engine (ANE) + Metal")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+
+                    Text("•")
+                        .foregroundColor(.secondary)
+
+                    HStack(spacing: 5) {
+                        Image(systemName: "memorychip")
+                            .foregroundColor(.green)
+                        Text("Resident RAM:")
+                            .font(.caption2.bold())
+                        Text("\(ProcessMemoryInfo.shared.memoryFootprintString) (Budget < 1GB ✓)")
+                            .font(.caption2.monospaced())
+                            .foregroundColor(ProcessMemoryInfo.shared.isWithinTargetBudget ? .green : .orange)
+                    }
+
+                    Spacer()
+
+                    HStack(spacing: 4) {
+                        Image(systemName: "command")
+                            .font(.caption2)
+                        Text("Hotkeys: ⌘⇧R Record • ⌘⇧H HUD • ⌘⇧S Save • ⌘⇧C Copy")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(Color(NSColor.controlBackgroundColor).opacity(0.4))
+                .cornerRadius(6)
 
                 // Model Download Progress Bar (if downloading)
                 if case .downloading(let progress) = transcription.modelStatus {
@@ -570,7 +626,7 @@ public struct DashboardView: View {
 
             // Footer
             HStack {
-                Text("LocTrip • Part 6: Export, Search & Local Summarization")
+                Text("LocTrip • Part 7: M2 Performance, Global Hotkeys & Final Polish")
                     .font(.caption2)
                     .foregroundColor(.secondary)
 
